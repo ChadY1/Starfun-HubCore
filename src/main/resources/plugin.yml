@@ -1,8 +1,8 @@
 name: StarfunHubCore
 main: com.example.hubcore.HubCorePlugin
-version: 1.0.0
+version: 1.21.8
 author: Starfun
-api-version: 1.20
+api-version: 1.21
 commands:
   hub:
     description: Teleport to a hub.
