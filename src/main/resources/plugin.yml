@@ -3,6 +3,7 @@ main: com.example.hubcore.HubCorePlugin
 version: 1.21.8
 author: Starfun
 api-version: 1.21
+folia-supported: true
 commands:
   hub:
     description: Teleport to a hub.
@@ -26,3 +27,6 @@ commands:
     description: Login to Starfun.
     usage: /login <password>
     aliases: [l]
+  starfunreload:
+    description: Reload Starfun configuration.
+    usage: /starfunreload
