@@ -4,7 +4,6 @@ import com.example.hubcore.HubCorePlugin;
 import com.example.hubcore.security.CryptoUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.bukkit.Bukkit;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -57,7 +56,7 @@ public class PlayerProfileManager {
 
     public void saveProfile(PlayerProfile profile) {
         cache.put(profile.getUuid(), profile);
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        plugin.getServer().getAsyncScheduler().runNow(plugin, scheduledTask -> {
             File file = new File(dataFolder, profile.getUuid().toString() + ".dat");
             try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
                 String json = gson.toJson(profile);

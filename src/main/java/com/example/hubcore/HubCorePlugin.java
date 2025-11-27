@@ -4,6 +4,8 @@ import com.example.hubcore.api.JsonApiServer;
 import com.example.hubcore.auth.AuthManager;
 import com.example.hubcore.auth.LoginCommand;
 import com.example.hubcore.auth.RegisterCommand;
+import com.example.hubcore.bank.BankManager;
+import com.example.hubcore.bank.BankService;
 import com.example.hubcore.bungee.BungeeMessenger;
 import com.example.hubcore.chat.ChatFormatterListener;
 import com.example.hubcore.essentials.FlyCommand;
@@ -28,36 +30,14 @@ public class HubCorePlugin extends JavaPlugin {
     private CryptoUtil fallbackCryptoUtil;
     private PlayerProfileManager profileManager;
     private AuthManager authManager;
+    private BankService bankService;
+    private GameMenuListener gameMenuListener;
+    private ChatFormatterListener chatFormatterListener;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        initSecurity();
-
-        this.profileManager = new PlayerProfileManager(this, cryptoUtil, fallbackCryptoUtil);
-        this.hubManager = new HubManager(this, profileManager);
-        this.bungeeMessenger = new BungeeMessenger(this);
-        this.gameMenuManager = new GameMenuManager(this);
-
-        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-
-        getServer().getPluginManager().registerEvents(new ChatFormatterListener(this), this);
-        getServer().getPluginManager().registerEvents(new GameMenuListener(this, gameMenuManager, bungeeMessenger), this);
-
-        this.authManager = new AuthManager(this, profileManager, hubManager);
-
-        getCommand("hub").setExecutor(new HubCommand(hubManager));
-        getCommand("sethub").setExecutor(new SetHubCommand(this));
-        getCommand("spawn").setExecutor(new SpawnCommand(hubManager));
-        getCommand("fly").setExecutor(new FlyCommand());
-        getCommand("games").setExecutor((sender, command, label, args) -> gameMenuManager.openMenuCommand(sender));
-
-        getCommand("register").setExecutor(new RegisterCommand(authManager));
-        getCommand("login").setExecutor(new LoginCommand(authManager));
-
-        this.jsonApiServer = new JsonApiServer(this, hubManager, cryptoUtil, profileManager);
-        jsonApiServer.start();
-
+        initializeSystems();
         getLogger().info("HubCore (Starfun) enabled.");
     }
 
@@ -67,6 +47,49 @@ public class HubCorePlugin extends JavaPlugin {
             jsonApiServer.stop();
         }
         getLogger().info("HubCore (Starfun) disabled.");
+    }
+
+    public void reloadStarfun() {
+        org.bukkit.event.HandlerList.unregisterAll(this);
+        getServer().getMessenger().unregisterOutgoingPluginChannel(this, "BungeeCord");
+        if (jsonApiServer != null) {
+            jsonApiServer.stop();
+        }
+        reloadConfig();
+        initializeSystems();
+        getLogger().info("[Starfun/Reload] Configuration reloaded.");
+    }
+
+    private void initializeSystems() {
+        initSecurity();
+
+        this.profileManager = new PlayerProfileManager(this, cryptoUtil, fallbackCryptoUtil);
+        this.hubManager = new HubManager(this, profileManager);
+        BankManager bankManager = new BankManager(this, cryptoUtil);
+        this.bankService = new BankService(this, bankManager);
+        this.bungeeMessenger = new BungeeMessenger(this);
+        this.gameMenuManager = new GameMenuManager(this);
+
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+
+        this.chatFormatterListener = new ChatFormatterListener(this);
+        this.gameMenuListener = new GameMenuListener(this, gameMenuManager, bungeeMessenger);
+        getServer().getPluginManager().registerEvents(chatFormatterListener, this);
+        getServer().getPluginManager().registerEvents(gameMenuListener, this);
+
+        this.authManager = new AuthManager(this, profileManager, hubManager);
+
+        getCommand("hub").setExecutor(new HubCommand(hubManager));
+        getCommand("sethub").setExecutor(new SetHubCommand(this));
+        getCommand("spawn").setExecutor(new SpawnCommand(hubManager));
+        getCommand("fly").setExecutor(new FlyCommand());
+        getCommand("games").setExecutor((sender, command, label, args) -> gameMenuManager.openMenuCommand(sender));
+        getCommand("register").setExecutor(new RegisterCommand(authManager));
+        getCommand("login").setExecutor(new LoginCommand(authManager));
+        getCommand("starfunreload").setExecutor(new com.example.hubcore.commands.StarfunReloadCommand(this));
+
+        this.jsonApiServer = new JsonApiServer(this, hubManager, cryptoUtil, profileManager, bankService);
+        jsonApiServer.start();
     }
 
     private void initSecurity() {

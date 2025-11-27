@@ -27,3 +27,6 @@ commands:
     description: Login to Starfun.
     usage: /login <password>
     aliases: [l]
+  starfunreload:
+    description: Reload Starfun configuration.
+    usage: /starfunreload
