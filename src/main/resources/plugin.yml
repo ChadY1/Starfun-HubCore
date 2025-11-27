@@ -1,0 +1,28 @@
+name: StarfunHubCore
+main: com.example.hubcore.HubCorePlugin
+version: 1.0.0
+author: Starfun
+api-version: 1.20
+commands:
+  hub:
+    description: Teleport to a hub.
+    usage: /hub [name]
+  sethub:
+    description: Set the default hub location.
+    usage: /sethub
+  spawn:
+    description: Teleport to spawn (default hub).
+    usage: /spawn
+  fly:
+    description: Toggle flight mode.
+    usage: /fly
+  games:
+    description: Open the game selector menu.
+    usage: /games
+  register:
+    description: Register account on Starfun.
+    usage: /register <password> <confirm>
+  login:
+    description: Login to Starfun.
+    usage: /login <password>
+    aliases: [l]
