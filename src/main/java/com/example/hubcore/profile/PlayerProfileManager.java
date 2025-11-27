@@ -49,6 +49,10 @@ public class PlayerProfileManager {
         return cache.get(uuid);
     }
 
+    public java.util.Collection<PlayerProfile> getCacheSnapshot() {
+        return java.util.Collections.unmodifiableCollection(cache.values());
+    }
+
     public void saveProfile(PlayerProfile profile) {
         cache.put(profile.getUuid(), profile);
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {

@@ -54,7 +54,7 @@ public class HubCorePlugin extends JavaPlugin {
         getCommand("register").setExecutor(new RegisterCommand(authManager));
         getCommand("login").setExecutor(new LoginCommand(authManager));
 
-        this.jsonApiServer = new JsonApiServer(this, hubManager, cryptoUtil);
+        this.jsonApiServer = new JsonApiServer(this, hubManager, cryptoUtil, profileManager);
         jsonApiServer.start();
 
         getLogger().info("HubCore (Starfun) enabled.");
@@ -69,8 +69,17 @@ public class HubCorePlugin extends JavaPlugin {
     }
 
     private void initSecurity() {
-        String key = getConfig().getString("security.encryption.key", null);
-        if (key == null || key.equalsIgnoreCase("CHANGE_ME_GENERATED_BASE64_AES_KEY")) {
+        boolean rotate = getConfig().getBoolean("security.encryption.rotate-on-restart", true);
+        String key = getConfig().getString("security.encryption.key", "");
+
+        if (rotate) {
+            key = generateRandomKey();
+            getConfig().set("security.encryption.key", key);
+            saveConfig();
+            getLogger().info("Generated new runtime AES key for this session (rotate-on-restart=true).");
+        }
+
+        if (key == null || key.isBlank() || key.equalsIgnoreCase("CHANGE_ME_GENERATED_BASE64_AES_KEY")) {
             getLogger().warning("No valid security.encryption.key set. Encryption disabled.");
             this.cryptoUtil = null;
             return;
@@ -81,6 +90,13 @@ public class HubCorePlugin extends JavaPlugin {
             getLogger().severe("Failed to initialize CryptoUtil: " + e.getMessage());
             this.cryptoUtil = null;
         }
+    }
+
+    private String generateRandomKey() {
+        java.security.SecureRandom random = new java.security.SecureRandom();
+        byte[] bytes = new byte[32];
+        random.nextBytes(bytes);
+        return java.util.Base64.getEncoder().encodeToString(bytes);
     }
 
     public HubManager getHubManager() { return hubManager; }

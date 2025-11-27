@@ -3,6 +3,8 @@ package com.example.hubcore.api;
 import com.example.hubcore.HubCorePlugin;
 import com.example.hubcore.hub.HubManager;
 import com.example.hubcore.security.CryptoUtil;
+import com.example.hubcore.profile.PlayerProfile;
+import com.example.hubcore.profile.PlayerProfileManager;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.bukkit.Bukkit;
@@ -16,6 +18,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -25,6 +32,7 @@ public class JsonApiServer implements Listener {
     private final HubCorePlugin plugin;
     private final HubManager hubManager;
     private final CryptoUtil cryptoUtil;
+    private final PlayerProfileManager profileManager;
 
     private HttpServer server;
 
@@ -39,10 +47,11 @@ public class JsonApiServer implements Listener {
     private final String tokenValue;
     private final boolean encryptionEnabled;
 
-    public JsonApiServer(HubCorePlugin plugin, HubManager hubManager, CryptoUtil cryptoUtil) {
+    public JsonApiServer(HubCorePlugin plugin, HubManager hubManager, CryptoUtil cryptoUtil, PlayerProfileManager profileManager) {
         this.plugin = plugin;
         this.hubManager = hubManager;
         this.cryptoUtil = cryptoUtil;
+        this.profileManager = profileManager;
 
         this.serverName = plugin.getConfig().getString("general.server-name", "Hub-1");
         this.motd = plugin.getConfig().getString("general.motd", "Hub server");
@@ -70,14 +79,16 @@ public class JsonApiServer implements Listener {
         String bind = plugin.getConfig().getString("api.bind-address", "0.0.0.0");
         int port = plugin.getConfig().getInt("api.port", 8080);
         String contextPath = plugin.getConfig().getString("api.context-path", "/hubcore/status");
+        String profilePath = plugin.getConfig().getString("api.profile-path", "/hubcore/profile");
         boolean corsEnabled = plugin.getConfig().getBoolean("api.cors-enabled", true);
 
         try {
             server = HttpServer.create(new InetSocketAddress(bind, port), 0);
             server.createContext(contextPath, exchange -> handleStatus(exchange, corsEnabled));
+            server.createContext(profilePath, exchange -> handleProfile(exchange, corsEnabled));
             server.setExecutor(Executors.newCachedThreadPool());
             server.start();
-            plugin.getLogger().info("JSON API started on " + bind + ":" + port + contextPath);
+            plugin.getLogger().info("JSON API started on " + bind + ":" + port + " [status=" + contextPath + ", profile=" + profilePath + "]");
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to start JSON API: " + e.getMessage());
         }
@@ -158,6 +169,109 @@ public class JsonApiServer implements Listener {
 
     private String escape(String s) {
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private Map<String, String> parseQuery(String query) {
+        Map<String, String> params = new HashMap<>();
+        if (query == null || query.isEmpty()) {
+            return params;
+        }
+        String[] parts = query.split("&");
+        for (String part : parts) {
+            String[] kv = part.split("=", 2);
+            if (kv.length == 2) {
+                try {
+                    String key = URLDecoder.decode(kv[0], StandardCharsets.UTF_8.name());
+                    String value = URLDecoder.decode(kv[1], StandardCharsets.UTF_8.name());
+                    params.put(key, value);
+                } catch (UnsupportedEncodingException ignored) {
+                }
+            }
+        }
+        return params;
+    }
+
+    private void handleProfile(HttpExchange exchange, boolean corsEnabled) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            exchange.close();
+            return;
+        }
+
+        if (corsEnabled) {
+            exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        }
+        exchange.getResponseHeaders().add("Content-Type", "application/json; charset=utf-8");
+
+        if (requireToken) {
+            String header = exchange.getRequestHeaders().getFirst(tokenHeader);
+            if (header == null || !header.equals(tokenValue)) {
+                sendJson(exchange, 401, "{\"error\":\"unauthorized\"}");
+                return;
+            }
+        }
+
+        Map<String, String> params = parseQuery(exchange.getRequestURI().getRawQuery());
+        String uuidParam = params.get("uuid");
+        String nameParam = params.get("player");
+
+        PlayerProfile profile = null;
+        if (uuidParam != null) {
+            try {
+                profile = profileManager.getProfile(java.util.UUID.fromString(uuidParam));
+            } catch (IllegalArgumentException ignored) {
+                sendJson(exchange, 400, "{\"error\":\"invalid_uuid\"}");
+                return;
+            }
+        } else if (nameParam != null) {
+            Collection<PlayerProfile> snapshot = profileManager.getCacheSnapshot();
+            for (PlayerProfile p : snapshot) {
+                if (p.getName() != null && p.getName().equalsIgnoreCase(nameParam)) {
+                    profile = p;
+                    break;
+                }
+            }
+        }
+
+        if (profile == null) {
+            sendJson(exchange, 404, wrapMaybeEncrypted("{\"error\":\"profile_not_found\"}"));
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append("\"uuid\":\"").append(escape(profile.getUuid().toString())).append("\",");
+        sb.append("\"name\":\"").append(escape(profile.getName())).append("\",");
+        sb.append("\"lastIp\":\"").append(escape(profile.getLastIp())).append("\",");
+        sb.append("\"createdAt\":").append(profile.getCreatedAt()).append(",");
+        sb.append("\"lastLogin\":").append(profile.getLastLogin()).append(",");
+        sb.append("\"registered\":").append(profile.isRegistered()).append(",");
+        sb.append("\"selectedHub\":\"").append(escape(profile.getSelectedHub() == null ? "" : profile.getSelectedHub())).append("\"");
+        sb.append("}");
+
+        sendJson(exchange, 200, wrapMaybeEncrypted(sb.toString()));
+    }
+
+    private String wrapMaybeEncrypted(String json) {
+        if (encryptionEnabled) {
+            try {
+                String encrypted = cryptoUtil.encrypt(json);
+                return "{\"encrypted\":true,\"payload\":\"" + escape(encrypted) + "\"}";
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to encrypt API response: " + e.getMessage());
+                return "{\"encrypted\":false,\"error\":\"encryption_failed\"}";
+            }
+        }
+        return json;
+    }
+
+    private void sendJson(HttpExchange exchange, int status, String body) throws IOException {
+        byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(status, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
+        exchange.close();
     }
 
     @EventHandler

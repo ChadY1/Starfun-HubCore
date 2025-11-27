@@ -70,8 +70,9 @@ playerdata:
 security:
   encryption:
     enabled: true
-    # Clé AES 256 bits en Base64 (à générer toi-même !)
-    # Exemple: openssl rand -base64 32
+    rotate-on-restart: true
+    # Clé AES 256 bits en Base64 (sera régénérée à chaque redémarrage si rotate-on-restart=true)
+    # Exemple de valeur fixe si tu désactives la rotation: openssl rand -base64 32
     key: "CHANGE_ME_GENERATED_BASE64_AES_KEY"
 
   api:
@@ -99,4 +100,5 @@ api:
   bind-address: "0.0.0.0"
   port: 8080
   context-path: "/hubcore/status"
+  profile-path: "/hubcore/profile"
   cors-enabled: true

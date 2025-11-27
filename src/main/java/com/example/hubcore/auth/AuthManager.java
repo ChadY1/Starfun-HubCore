@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public class AuthManager implements Listener {
 
@@ -205,7 +206,7 @@ public class AuthManager implements Listener {
 
             player.sendMessage(ChatColor.GREEN + "Enregistrement réussi sur " + serverName + ".");
         } catch (Exception e) {
-            plugin.getLogger().severe("Failed to register " + player.getName() + ": " + e.getMessage());
+            plugin.getLogger().log(Level.SEVERE, "Failed to register " + player.getName() + ": " + e.getMessage(), e);
             player.sendMessage(ChatColor.RED + "Erreur interne lors de l'enregistrement.");
         }
         return true;
