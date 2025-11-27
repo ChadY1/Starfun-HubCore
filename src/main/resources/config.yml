@@ -1,0 +1,104 @@
+general:
+  server-name: "Starfun-Hub-1"
+  motd: "&6&lSTARFUN &8» &7Hub principal"
+
+# --------------------------------------------------
+# Multi-hubs
+# --------------------------------------------------
+hubs:
+  teleport-on-join: true
+  default-hub: "main"
+  profiles:
+    main:
+      world: "world"
+      x: 0.5
+      y: 80.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+    pvp:
+      world: "world_pvp"
+      x: 0.5
+      y: 70.0
+      z: 0.5
+      yaw: 180.0
+      pitch: 0.0
+    event:
+      world: "world_event"
+      x: 10.5
+      y: 90.0
+      z: -5.5
+      yaw: 90.0
+      pitch: 0.0
+
+chat:
+  enabled: true
+  format: "&8[&6Starfun&8] &7%player% &8» &f%message%"
+  default-prefix: "&8[&bJoueur&8]"
+  ranks:
+    "starfun.rank.admin":
+      prefix: "&8[&6Admin&8]"
+      name-color: "&6"
+    "starfun.rank.vip":
+      prefix: "&8[&bVIP&8]"
+      name-color: "&b"
+
+menu:
+  enabled: true
+  open-on-join: false
+  title: "&8» &6Starfun &7Jeux &8«"
+  size: 27
+  filler:
+    enabled: true
+    material: "GRAY_STAINED_GLASS_PANE"
+    name: "&7"
+  items:
+    skywars:
+      material: "DIAMOND_SWORD"
+      slot: 11
+      name: "&6SkyWars"
+      lore:
+        - "&7PvP &8| &bSkyWars"
+      server: "skywars-1"
+
+# --------------------------------------------------
+# Profils joueurs + chiffrement
+# --------------------------------------------------
+playerdata:
+  folder: "playerdata"
+
+security:
+  encryption:
+    enabled: true
+    rotate-on-restart: true
+    # Clé AES 256 bits en Base64 (sera régénérée à chaque redémarrage si rotate-on-restart=true)
+    # Exemple de valeur fixe si tu désactives la rotation: openssl rand -base64 32
+    key: "CHANGE_ME_GENERATED_BASE64_AES_KEY"
+
+  api:
+    require-token: true
+    token-header: "X-Starfun-Auth"
+    token: "CHANGE_ME_LONG_RANDOM_TOKEN"
+
+auth:
+  enabled: true
+  server-name: "Starfun"
+  login-timeout-seconds: 60
+
+  protections:
+    block-movement: true
+    block-chat: true
+    block-commands: true
+    allowed-commands:
+      - "login"
+      - "l"
+      - "register"
+      - "reg"
+
+api:
+  enabled: true
+  bind-address: "0.0.0.0"
+  port: 8080
+  context-path: "/hubcore/status"
+  profile-path: "/hubcore/profile"
+  cors-enabled: true
