@@ -10,4 +10,7 @@ Plugin hub multi-profils pour Folia 1.21.8.
 ```
 mvn -DskipTests package
 ```
-Le workflow GitHub Actions `.github/workflows/build.yml` utilise également Java 21 pour éviter l'erreur `invalid target release`.
+
+Le jar final (ombré) est `target/hubcore-1.21.8.jar`. Le workflow GitHub
+Actions `.github/workflows/build.yml` utilise également Java 21 pour éviter
+l'erreur `invalid target release`.
