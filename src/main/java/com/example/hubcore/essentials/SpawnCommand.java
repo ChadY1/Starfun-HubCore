@@ -16,10 +16,11 @@ public class SpawnCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage("Players only.");
             return true;
         }
+        Player player = (Player) sender;
         hubManager.teleportToDefaultHub(player);
         return true;
     }

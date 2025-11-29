@@ -16,11 +16,12 @@ public class HubCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage("Players only.");
             return true;
         }
 
+        Player player = (Player) sender;
         String hubName = (args.length > 0) ? args[0] : null;
 
         boolean ok = hubManager.teleportToHub(player, hubName);

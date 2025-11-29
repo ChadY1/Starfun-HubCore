@@ -32,7 +32,10 @@ public class ChatFormatterListener implements Listener {
         ConfigurationSection ranks = chat.getConfigurationSection("ranks");
         if (ranks != null) {
             for (Map.Entry<String, Object> entry : ranks.getValues(false).entrySet()) {
-                if (!(entry.getValue() instanceof ConfigurationSection section)) continue;
+                if (!(entry.getValue() instanceof ConfigurationSection)) {
+                    continue;
+                }
+                ConfigurationSection section = (ConfigurationSection) entry.getValue();
                 String perm = entry.getKey();
                 if (player.hasPermission(perm)) {
                     prefix = section.getString("prefix", prefix);

@@ -10,10 +10,11 @@ public class FlyCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage("Players only.");
             return true;
         }
+        Player player = (Player) sender;
         boolean enable = !player.getAllowFlight();
         player.setAllowFlight(enable);
         player.sendMessage(ChatColor.GREEN + "Mode vol " + (enable ? "activé" : "désactivé") + ".");

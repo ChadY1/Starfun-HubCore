@@ -1,8 +1,7 @@
 name: StarfunHubCore
 main: com.example.hubcore.HubCorePlugin
-version: 1.21.8
+version: 1.9.4
 author: Starfun
-api-version: 1.21
 commands:
   hub:
     description: Teleport to a hub.
@@ -26,3 +25,10 @@ commands:
     description: Login to Starfun.
     usage: /login <password>
     aliases: [l]
+  starfunreload:
+    description: Reload Starfun configuration.
+    usage: /starfunreload
+permissions:
+  starfun.admin.reload:
+    description: Allows reloading Starfun HubCore configuration.
+    default: op

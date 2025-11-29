@@ -15,10 +15,11 @@ public class RegisterCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage("Players only.");
             return true;
         }
+        Player player = (Player) sender;
         if (args.length < 2) {
             player.sendMessage("Usage: /register <motdepasse> <confirmation>");
             return true;
