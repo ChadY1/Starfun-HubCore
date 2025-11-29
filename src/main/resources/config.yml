@@ -50,7 +50,7 @@ menu:
   size: 27
   filler:
     enabled: true
-    material: "GRAY_STAINED_GLASS_PANE"
+    material: "STAINED_GLASS_PANE"
     name: "&7"
   items:
     skywars:
@@ -70,9 +70,15 @@ playerdata:
 security:
   encryption:
     enabled: true
-    # Clé AES 256 bits en Base64 (à générer toi-même !)
-    # Exemple: openssl rand -base64 32
+    rotate-on-restart: true
+    previous-key: ""
+    # Clé AES 256 bits en Base64 (sera régénérée à chaque redémarrage si rotate-on-restart=true)
+    # Exemple de valeur fixe si tu désactives la rotation: openssl rand -base64 32
     key: "CHANGE_ME_GENERATED_BASE64_AES_KEY"
+
+  password:
+    pepper: "CHANGE_ME_SUPER_SECRET_PEPPER_256_BITS"
+    iterations: 120000
 
   api:
     require-token: true
@@ -94,9 +100,33 @@ auth:
       - "register"
       - "reg"
 
+  bruteforce:
+    enabled: true
+    max-attempts: 5
+    cooldown-seconds: 30
+    ip-lock: false
+    ip-lock-seconds: 900
+
 api:
   enabled: true
   bind-address: "0.0.0.0"
   port: 8080
   context-path: "/hubcore/status"
+  profile-path: "/hubcore/profile"
+  bank-path: "/hubcore/bank"
   cors-enabled: true
+
+# --------------------------------------------------
+# Bungeecord / réseau
+# --------------------------------------------------
+bungeecord:
+  enabled: true
+  channel: "BungeeCord"
+  # Base URL pour les API réseau (panel, stats, matchmaking)
+  network-api-base: "https://api.starfun.example"
+  # Endpoint pour récupérer l'état des jeux (utilisé par les menus ou microservices)
+  games-status-endpoint: "/games/status"
+
+vote:
+  enabled: false
+

@@ -106,10 +106,11 @@ public class GameMenuManager {
     }
 
     public boolean openMenuCommand(org.bukkit.command.CommandSender sender) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage("Players only.");
             return true;
         }
+        Player player = (Player) sender;
         if (!enabled) {
             sender.sendMessage("Le menu est désactivé.");
             return true;

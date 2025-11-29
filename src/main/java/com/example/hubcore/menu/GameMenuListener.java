@@ -23,7 +23,8 @@ public class GameMenuListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) event.getWhoClicked();
         if (!menuManager.isMenu(event.getInventory())) return;
 
         event.setCancelled(true);

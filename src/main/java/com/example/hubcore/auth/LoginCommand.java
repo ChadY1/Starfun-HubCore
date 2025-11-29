@@ -15,10 +15,11 @@ public class LoginCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage("Players only.");
             return true;
         }
+        Player player = (Player) sender;
         if (args.length < 1) {
             player.sendMessage("Usage: /login <motdepasse>");
             return true;
